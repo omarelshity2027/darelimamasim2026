@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>دار الإمام عاصم — نظام الإدارة</title>
+
+<!-- ============================================================
+  طريقة الربط بقاعدة البيانات الخارجية (Supabase):
+  1) ادخل على https://supabase.com واعمل مشروع جديد مجاني
+  2) افتح SQL Editor، الصق محتوى ملف supabase-setup.sql واضغط Run
+  3) من Settings > API انسخ "Project URL" و "anon public key"
+  4) ضعهما في const CONFIG بالأسفل ثم افتح الملف في المتصفح
+  ملاحظة أمان: كلمة مرور المشرف هنا ظاهرة في الكود؛ لتأمين أفضل
+  استخدم Supabase Auth. هذه النسخة مخصصة لاستخدام إداري بسيط.
+============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+<style>
+  body { font-family: 'Cairo', sans-serif; background: #f1f5f9; }
+  .nav-btn { transition: all .15s; }
+  .nav-btn.active { background: #0f172a; color: #fff; }
+  table th, table td { white-space: nowrap; }
+  .modal-inner { max-height: 85vh; overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<div id="toast" class="hidden"></div>
+
+<!-- ==================== شاشة الدخول ==================== -->
+<div id="loginView" class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-sm">
+    <div class="bg-white rounded-2xl shadow-lg border p-8">
+      <div class="text-center mb-6">
+        <div class="text-4xl mb-2">📖</div>
+        <h1 class="text-2xl font-extrabold text-slate-800">دار الإمام عاصم</h1>
+        <p class="text-sm text-slate-500 mt-1">نظام إدارة حلقة التحفيظ</p>
+      </div>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">اسم المستخدم</label>
+          <input id="username" dir="ltr" autocomplete="username"
+            class="w-full h-11 rounded-xl border border-slate-300 px-3 text-left focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="admin" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">كلمة المرور</label>
+          <input id="password" type="password" dir="ltr" autocomplete="current-password"
+            class="w-full h-11 rounded-xl border border-slate-300 px-3 text-left focus:outline-none focus:ring-2 focus:ring-slate-900" />
+        </div>
+        <button type="submit"
+          class="w-full h-11 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-700 transition">دخول</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== التطبيق ==================== -->
+<div id="appView" class="hidden">
+
+  <!-- شريط علوي للموبايل -->
+  <div class="md:hidden bg-white border-b px-4 py-3 flex items-center justify-between">
+    <span class="font-extrabold">دار الإمام عاصم</span>
+    <button onclick="logout()" class="text-sm text-red-600 font-semibold">خروج</button>
+  </div>
+
+  <div class="flex">
+    <!-- القائمة الجانبية -->
+    <aside class="hidden md:flex w-64 flex-col bg-slate-900 text-slate-100 min-h-screen">
+      <div class="p-6">
+        <h1 class="text-xl font-extrabold">دار الإمام عاصم</h1>
+        <p class="text-xs text-slate-400 mt-1">نظام الإدارة</p>
+      </div>
+      <nav class="flex-1 space-y-1 px-3">
+        <button data-section="dashboard" class="nav-btn w-full text-right px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3" onclick="showSection('dashboard')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z"/></svg>
+          لوحة التحكم
+        </button>
+        <button data-section="students" class="nav-btn w-full text-right px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3" onclick="showSection('students')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          الطلاب
+        </button>
+        <button data-section="teachers" class="nav-btn w-full text-right px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3" onclick="showSection('teachers')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zM12 14v6M19 9.5v3.5M22 20v-7"/></svg>
+          المعلمون
+        </button>
+        <button data-section="finance" class="nav-btn w-full text-right px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3" onclick="showSection('finance')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          الحسابات
+        </button>
+        <button data-section="reports" class="nav-btn w-full text-right px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3" onclick="showSection('reports')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18M8 17V9M13 17V5M18 17v-4"/></svg>
+          التقارير
+        </button>
+      </nav>
+      <div class="p-4 border-t border-slate-800">
+        <button onclick="logout()" class="w-full text-right text-sm font-semibold text-red-400 hover:text-red-300">تسجيل الخروج</button>
+      </div>
+    </aside>
+
+    <!-- قائمة موبايل -->
+    <div class="md:hidden bg-white border-b overflow-x-auto flex gap-2 px-3 py-2">
+      <button data-section="dashboard" class="nav-btn text-xs px-3 py-1.5 rounded-lg" onclick="showSection('dashboard')">لوحة التحكم</button>
+      <button data-section="students" class="nav-btn text-xs px-3 py-1.5 rounded-lg" onclick="showSection('students')">الطلاب</button>
+      <button data-section="teachers" class="nav-btn text-xs px-3 py-1.5 rounded-lg" onclick="showSection('teachers')">المعلمون</button>
+      <button data-section="finance" class="nav-btn text-xs px-3 py-1.5 rounded-lg" onclick="showSection('finance')">الحسابات</button>
+      <button data-section="reports" class="nav-btn text-xs px-3 py-1.5 rounded-lg" onclick="showSection('reports')">التقارير</button>
+    </div>
+
+    <!-- المحتوى -->
+    <main id="content" class="flex-1 p-4 md:p-8 min-h-screen"></main>
+  </div>
+</div>
+
+<script>
+// ======================= الإعدادات =======================
+const CONFIG = {
+  SUPABASE_URL: "https://YOUR-PROJECT.supabase.co",
+  SUPABASE_ANON_KEY: "YOUR-ANON-KEY",
+  ADMIN_USER: "admin",
+  ADMIN_PASSWORD: "change-me-now",
+};
+
+const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+// ======================= أدوات =======================
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+}
+function fmt(n) {
+  return Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 }) + " ج.م";
+}
+function fmtDate(d) {
+  if (!d) return "—";
+  const p = String(d).slice(0, 10).split("-");
+  return p[2] + "/" + p[1] + "/" + p[0];
+}
+const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+
+let toastTimer;
+function toast(msg, type = "info") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className =
+    "fixed bottom-4 right-4 z-[100] rounded-xl px-4 py-3 text-sm text-white shadow-lg " +
+    (type === "success" ? "bg-emerald-600" : type === "error" ? "bg-red-600" : "bg-slate-800");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = "hidden"; }, 3500);
+}
+
+function openModal(html) {
+  const overlay = document.createElement("div");
+  overlay.className = "fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 overflow-y-auto";
+  overlay.innerHTML = `<div class="modal-inner bg-white rounded-2xl shadow-xl w-full max-w-lg my-8 relative">${html}</div>`;
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  return overlay;
+}
+function closeModal(overlay) { overlay.remove(); }
+
+// ======================= الدخول والخروج =======================
+document.getElementById("loginForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (CONFIG.SUPABASE_URL.includes("YOUR-PROJECT") || CONFIG.SUPABASE_ANON_KEY.includes("YOUR-ANON")) {
+    toast("ضع بيانات Supabase في CONFIG أعلى الملف أولاً", "error");
+    return;
+  }
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value;
+  if (u === CONFIG.ADMIN_USER && p === CONFIG.ADMIN_PASSWORD) {
+    sessionStorage.setItem("dias_admin", "1");
+    showApp();
+  } else {
+    toast("اسم المستخدم أو كلمة المرور غير صحيحة", "error");
+  }
+});
+function logout() {
+  sessionStorage.removeItem("dias_admin");
+  document.getElementById("appView").classList.add("hidden");
+  document.getElementById("loginView").classList.remove("hidden");
+}
+function showApp() {
+  document.getElementById("loginView").classList.add("hidden");
+  document.getElementById("appView").classList.remove("hidden");
+  showSection("dashboard");
+}
+window.addEventListener("DOMContentLoaded", () => {
+  if (sessionStorage.getItem("dias_admin") === "1") showApp();
+});
+
+// ======================= تحميل البيانات =======================
+let teachersCache = null, studentsCache = null, categoriesCache = null, transactionsCache = null;
+async function loadTeachers() {
+  if (!teachersCache) {
+    const { data, error } = await supabase.from("Teacher").select("*").order("name");
+    if (error) { toast("تعذر تحميل المعلمين: " + error.message, "error"); return null; }
+    teachersCache = data;
+  }
+  return teachersCache;
+}
+async function loadStudents() {
+  if (!studentsCache) {
+    const { data, error } = await supabase.from("Student").select("*").order("name");
+    if (error) { toast("تعذر تحميل الطلاب: " + error.message, "error"); return null; }
+    studentsCache = data;
+  }
+  return studentsCache;
+}
+async function loadCategories() {
+  if (!categoriesCache) {
+    const { data, error } = await supabase.from("Category").select("*").order("name");
+    if (error) { toast("تعذر تحميل الفئات: " + error.message, "error"); return null; }
+    categoriesCache = data;
+  }
+  return categoriesCache;
+}
+async function loadTransactions() {
+  if (!transactionsCache) {
+    const { data, error } = await supabase.from("Transaction").select("*").order("date", { ascending: false });
+    if (error) { toast("تعذر تحميل الحركات: " + error.message, "error"); return null; }
+    transactionsCache = data;
+  }
+  return transactionsCache;
+}
+
+function monthlySeries(transactions) {
+  const now = new Date();
+  const res = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    res.push({ key, label: MONTHS[d.getMonth()] + " " + d.getFullYear(), income: 0, expense: 0 });
+  }
+  (transactions || []).forEach((t) => {
+    const r = res.find((x) => x.key === String(t.date).slice(0, 7));
+    if (r) { if (t.type === "INCOME") r.income += Number(t.amount); else r.expense += Number(t.amount); }
+  });
+  return res;
+}
+
+// ======================= التنقل =======================
+function showSection(name) {
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.section === name));
+  ({ dashboard: renderDashboard, students: renderStudents, teachers: renderTeachers, finance: renderFinance, reports: renderReports })[name]();
+}
+
+// ======================= لوحة التحكم =======================
+let chart = null;
+function drawChart(series) {
+  const ctx = document.getElementById("chart");
+  if (!ctx) return;
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: series.map((s) => s.label),
+      datasets: [
+        { label: "الإيرادات", data: series.map((s) => s.income), backgroundColor: "#059669", borderRadius: 6 },
+        { label: "المصروفات", data: series.map((s) => s.expense), backgroundColor: "#dc2626", borderRadius: 6 },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { font: { family: "Cairo" } } } },
+      scales: { y: { beginAtZero: true } },
+    },
+  });
+}
+
+async function renderDashboard() {
+  const content = document.getElementById("content");
+  content.innerHTML = '<p class="text-slate-500">جارٍ التحميل...</p>';
+  const [ts, sts, tcs] = await Promise.all([loadTransactions(), loadStudents(), loadTeachers()]);
+  if (!ts) return;
+  const income = ts.filter((t) => t.type === "INCOME").reduce((a, t) => a + Number(t.amount), 0);
+  const expense = ts.filter((t) => t.type === "EXPENSE").reduce((a, t) => a + Number(t.amount), 0);
+  const net = income - expense;
+  const activeSts = (sts || []).filter((s) => s.status === "active").length;
+  const activeTcs = (tcs || []).filter((t) => t.status === "active").length;
+  const series = monthlySeries(ts);
+  const last3 = series.slice(-3).reverse();
+
+  content.innerHTML = `
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-extrabold text-slate-800">لوحة التحكم</h1>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">إجمالي الإيرادات</p><p class="text-lg font-bold text-emerald-700 mt-1">${fmt(income)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">إجمالي المصروفات</p><p class="text-lg font-bold text-red-700 mt-1">${fmt(expense)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">الصافي</p><p class="text-lg font-bold text-slate-800 mt-1">${fmt(net)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">الطلاب النشطون</p><p class="text-lg font-bold text-slate-800 mt-1">${activeSts}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">المعلمون النشطون</p><p class="text-lg font-bold text-slate-800 mt-1">${activeTcs}</p></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-white rounded-2xl border p-6">
+        <h2 class="font-bold text-slate-800 mb-4">الإيرادات والمصروفات (آخر 12 شهر)</h2>
+        <canvas id="chart"></canvas>
+      </div>
+      <div class="bg-white rounded-2xl border p-6">
+        <h2 class="font-bold text-slate-800 mb-4">آخر الشهور</h2>
+        <div class="space-y-3">
+          ${last3.map((m) => `
+            <div class="rounded-xl bg-slate-50 p-3 text-sm">
+              <p class="font-bold text-slate-700">${m.label}</p>
+              <p class="text-emerald-700 mt-1">إيرادات: ${fmt(m.income)}</p>
+              <p class="text-red-700">مصروفات: ${fmt(m.expense)}</p>
+              <p class="font-bold mt-1 text-slate-800">الصافي: ${fmt(m.income - m.expense)}</p>
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>`;
+  drawChart(series);
+}
+
+// ======================= الطلاب =======================
+async function openStudentModal(student) {
+  const tcs = await loadTeachers();
+  const opts = (tcs || []).map((t) =>
+    `<option value="${t.id}" ${student && Number(student.teacher_id) === t.id ? "selected" : ""}>${esc(t.name)}</option>`).join("");
+  const overlay = openModal(`
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-extrabold">${student ? "تعديل طالب" : "إضافة طالب"}</h3>
+        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+      </div>
+      <form id="studentForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <input type="hidden" name="id" value="${student ? student.id : ""}">
+        <div class="sm:col-span-2"><label class="block text-sm font-semibold mb-1">اسم الطالب *</label>
+          <input name="name" required class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${esc(student ? student.name : "")}"></div>
+        <div><label class="block text-sm font-semibold mb-1">رقم الهاتف</label>
+          <input name="phone" dir="ltr" class="w-full h-11 rounded-xl border border-slate-300 px-3 text-left" value="${esc(student ? student.phone : "")}"></div>
+        <div><label class="block text-sm font-semibold mb-1">اسم ولي الأمر</label>
+          <input name="guardian_name" class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${esc(student ? student.guardian_name : "")}"></div>
+        <div><label class="block text-sm font-semibold mb-1">هاتف ولي الأمر</label>
+          <input name="guardian_phone" dir="ltr" class="w-full h-11 rounded-xl border border-slate-300 px-3 text-left" value="${esc(student ? student.guardian_phone : "")}"></div>
+        <div><label class="block text-sm font-semibold mb-1">المعلم</label>
+          <select name="teacher_id" class="w-full h-11 rounded-xl border border-slate-300 px-3 bg-white">
+            <option value="">بدون معلم</option>${opts}
+          </select></div>
+        <div><label class="block text-sm font-semibold mb-1">المصروف الشهري (ج.م)</label>
+          <input name="monthly_fee" type="number" min="0" step="0.01" class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${student ? student.monthly_fee : ""}"></div>
+        <div><label class="block text-sm font-semibold mb-1">تاريخ الالتحاق</label>
+          <input name="join_date" type="date" class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${student ? String(student.join_date).slice(0, 10) : new Date().toISOString().slice(0, 10)}"></div>
+        <div class="sm:col-span-2"><label class="block text-sm font-semibold mb-1">ملاحظات</label>
+          <textarea name="notes" rows="2" class="w-full rounded-xl border border-slate-300 px-3 py-2">${esc(student ? student.notes : "")}</textarea></div>
+        <div class="sm:col-span-2 flex justify-end gap-2">
+          <button type="button" onclick="this.closest('.fixed').remove()" class="h-11 px-5 rounded-xl border font-semibold text-slate-600">إلغاء</button>
+          <button type="submit" class="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold">حفظ</button>
+        </div>
+      </form>
+    </div>`);
+  overlay.querySelector("#studentForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const payload = {
+      name: fd.get("name"),
+      phone: fd.get("phone") || null,
+      guardian_name: fd.get("guardian_name") || null,
+      guardian_phone: fd.get("guardian_phone") || null,
+      teacher_id: fd.get("teacher_id") ? Number(fd.get("teacher_id")) : null,
+      monthly_fee: Number(fd.get("monthly_fee") || 0),
+      join_date: fd.get("join_date") || new Date().toISOString().slice(0, 10),
+      notes: fd.get("notes") || null,
+    };
+    const id = fd.get("id");
+    const res = id
+      ? await supabase.from("Student").update(payload).eq("id", Number(id))
+      : await supabase.from("Student").insert(payload);
+    if (res.error) return toast("خطأ: " + res.error.message, "error");
+    studentsCache = null;
+    toast(id ? "تم تحديث الطالب" : "تمت إضافة الطالب", "success");
+    closeModal(overlay);
+    renderStudents();
+  });
+}
+
+async function toggleStudent(id) {
+  const st = (studentsCache || []).find((s) => s.id === id);
+  if (!st) return;
+  const status = st.status === "active" ? "inactive" : "active";
+  const { error } = await supabase.from("Student").update({ status }).eq("id", id);
+  if (error) return toast("خطأ: " + error.message, "error");
+  studentsCache = null;
+  toast("تم تحديث الحالة", "success");
+  renderStudents();
+}
+
+async function renderStudents() {
+  const content = document.getElementById("content");
+  content.innerHTML = '<p class="text-slate-500">جارٍ التحميل...</p>';
+  const [sts, tcs] = await Promise.all([loadStudents(), loadTeachers()]);
+  if (!sts) return;
+  const tcMap = Object.fromEntries((tcs || []).map((t) => [t.id, t.name]));
+  const rows = sts.map((s) => `
+    <tr class="border-b border-slate-100 hover:bg-slate-50" data-search="${esc((s.name + " " + (s.guardian_name || "") + " " + (s.phone || "")).toLowerCase())}">
+      <td class="px-4 py-3 font-semibold text-slate-800">${esc(s.name)}</td>
+      <td class="px-4 py-3">${esc(s.guardian_name || "—")}</td>
+      <td class="px-4 py-3" dir="ltr">${esc(s.phone || "—")}</td>
+      <td class="px-4 py-3">${esc(tcMap[s.teacher_id] || "—")}</td>
+      <td class="px-4 py-3">${fmt(s.monthly_fee)}</td>
+      <td class="px-4 py-3">${fmtDate(s.join_date)}</td>
+      <td class="px-4 py-3">${s.status === "active"
+        ? '<span class="text-xs font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">نشط</span>'
+        : '<span class="text-xs font-bold px-2 py-1 rounded-full bg-slate-200 text-slate-600">موقوف</span>'}</td>
+      <td class="px-4 py-3">
+        <button onclick="openStudentModal(${JSON.stringify(s).replace(/"/g, "&quot;")})" class="text-sm text-sky-600 hover:underline font-semibold ml-2">تعديل</button>
+        <button onclick="toggleStudent(${s.id})" class="text-sm ${s.status === "active" ? "text-red-600" : "text-emerald-600"} hover:underline font-semibold">${s.status === "active" ? "إيقاف" : "تفعيل"}</button>
+      </td>
+    </tr>`).join("");
+
+  content.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <h1 class="text-2xl font-extrabold text-slate-800">الطلاب</h1>
+      <button onclick="openStudentModal()" class="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold">+ إضافة طالب</button>
+    </div>
+    <input id="studentSearch" placeholder="ابحث بالاسم أو ولي الأمر..." class="w-full md:w-80 h-11 rounded-xl border border-slate-300 px-4 mb-4" />
+    <div class="bg-white rounded-2xl border overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600">
+          <tr><th class="text-right px-4 py-3">الاسم</th><th class="text-right px-4 py-3">ولي الأمر</th><th class="text-right px-4 py-3">الهاتف</th><th class="text-right px-4 py-3">المعلم</th><th class="text-right px-4 py-3">المصروف</th><th class="text-right px-4 py-3">الالتحاق</th><th class="text-right px-4 py-3">الحالة</th><th class="text-right px-4 py-3">إجراءات</th></tr>
+        </thead>
+        <tbody id="studentTableBody">${rows || '<tr><td colspan="8" class="px-4 py-8 text-center text-slate-400">لا يوجد طلاب</td></tr>'}</tbody>
+      </table>
+    </div>`;
+  document.getElementById("studentSearch").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll("#studentTableBody tr").forEach((tr) => {
+      tr.style.display = tr.dataset.search.includes(q) ? "" : "none";
+    });
+  });
+}
+
+// ======================= المعلمون =======================
+async function openTeacherModal(teacher) {
+  const overlay = openModal(`
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-extrabold">${teacher ? "تعديل معلم" : "إضافة معلم"}</h3>
+        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+      </div>
+      <form id="teacherForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <input type="hidden" name="id" value="${teacher ? teacher.id : ""}">
+        <div class="sm:col-span-2"><label class="block text-sm font-semibold mb-1">اسم المعلم *</label>
+          <input name="name" required class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${esc(teacher ? teacher.name : "")}"></div>
+        <div><label class="block text-sm font-semibold mb-1">رقم الهاتف</label>
+          <input name="phone" dir="ltr" class="w-full h-11 rounded-xl border border-slate-300 px-3 text-left" value="${esc(teacher ? teacher.phone : "")}"></div>
+        <div><label class="block text-sm font-semibold mb-1">الراتب الشهري (ج.م)</label>
+          <input name="salary" type="number" min="0" step="0.01" class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${teacher ? teacher.salary : ""}"></div>
+        <div><label class="block text-sm font-semibold mb-1">تاريخ الالتحاق</label>
+          <input name="join_date" type="date" class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${teacher ? String(teacher.join_date).slice(0, 10) : new Date().toISOString().slice(0, 10)}"></div>
+        <div class="sm:col-span-2"><label class="block text-sm font-semibold mb-1">ملاحظات</label>
+          <textarea name="notes" rows="2" class="w-full rounded-xl border border-slate-300 px-3 py-2">${esc(teacher ? teacher.notes : "")}</textarea></div>
+        <div class="sm:col-span-2 flex justify-end gap-2">
+          <button type="button" onclick="this.closest('.fixed').remove()" class="h-11 px-5 rounded-xl border font-semibold text-slate-600">إلغاء</button>
+          <button type="submit" class="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold">حفظ</button>
+        </div>
+      </form>
+    </div>`);
+  overlay.querySelector("#teacherForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const payload = {
+      name: fd.get("name"),
+      phone: fd.get("phone") || null,
+      salary: Number(fd.get("salary") || 0),
+      join_date: fd.get("join_date") || new Date().toISOString().slice(0, 10),
+      notes: fd.get("notes") || null,
+    };
+    const id = fd.get("id");
+    const res = id
+      ? await supabase.from("Teacher").update(payload).eq("id", Number(id))
+      : await supabase.from("Teacher").insert(payload);
+    if (res.error) return toast("خطأ: " + res.error.message, "error");
+    teachersCache = null;
+    toast(id ? "تم تحديث المعلم" : "تمت إضافة المعلم", "success");
+    closeModal(overlay);
+    renderTeachers();
+  });
+}
+
+async function toggleTeacher(id) {
+  const t = (teachersCache || []).find((x) => x.id === id);
+  if (!t) return;
+  const status = t.status === "active" ? "inactive" : "active";
+  const { error } = await supabase.from("Teacher").update({ status }).eq("id", id);
+  if (error) return toast("خطأ: " + error.message, "error");
+  teachersCache = null;
+  toast("تم تحديث الحالة", "success");
+  renderTeachers();
+}
+
+async function renderTeachers() {
+  const content = document.getElementById("content");
+  content.innerHTML = '<p class="text-slate-500">جارٍ التحميل...</p>';
+  const tcs = await loadTeachers();
+  if (!tcs) return;
+  const rows = tcs.map((t) => `
+    <tr class="border-b border-slate-100 hover:bg-slate-50" data-search="${esc((t.name + " " + (t.phone || "")).toLowerCase())}">
+      <td class="px-4 py-3 font-semibold text-slate-800">${esc(t.name)}</td>
+      <td class="px-4 py-3" dir="ltr">${esc(t.phone || "—")}</td>
+      <td class="px-4 py-3">${fmt(t.salary)}</td>
+      <td class="px-4 py-3">${fmtDate(t.join_date)}</td>
+      <td class="px-4 py-3">${t.status === "active"
+        ? '<span class="text-xs font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">نشط</span>'
+        : '<span class="text-xs font-bold px-2 py-1 rounded-full bg-slate-200 text-slate-600">موقوف</span>'}</td>
+      <td class="px-4 py-3">
+        <button onclick="openTeacherModal(${JSON.stringify(t).replace(/"/g, "&quot;")})" class="text-sm text-sky-600 hover:underline font-semibold ml-2">تعديل</button>
+        <button onclick="toggleTeacher(${t.id})" class="text-sm ${t.status === "active" ? "text-red-600" : "text-emerald-600"} hover:underline font-semibold">${t.status === "active" ? "إيقاف" : "تفعيل"}</button>
+      </td>
+    </tr>`).join("");
+  content.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <h1 class="text-2xl font-extrabold text-slate-800">المعلمون</h1>
+      <button onclick="openTeacherModal()" class="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold">+ إضافة معلم</button>
+    </div>
+    <input id="teacherSearch" placeholder="ابحث بالاسم أو الهاتف..." class="w-full md:w-80 h-11 rounded-xl border border-slate-300 px-4 mb-4" />
+    <div class="bg-white rounded-2xl border overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600">
+          <tr><th class="text-right px-4 py-3">الاسم</th><th class="text-right px-4 py-3">الهاتف</th><th class="text-right px-4 py-3">الراتب</th><th class="text-right px-4 py-3">الالتحاق</th><th class="text-right px-4 py-3">الحالة</th><th class="text-right px-4 py-3">إجراءات</th></tr>
+        </thead>
+        <tbody id="teacherTableBody">${rows || '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">لا يوجد معلمون</td></tr>'}</tbody>
+      </table>
+    </div>`;
+  document.getElementById("teacherSearch").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll("#teacherTableBody tr").forEach((tr) => {
+      tr.style.display = tr.dataset.search.includes(q) ? "" : "none";
+    });
+  });
+}
+
+// ======================= الحسابات =======================
+let finType = "", finMonth = "", finQ = "";
+
+async function openTransactionModal() {
+  const [cats, sts, tcs] = await Promise.all([loadCategories(), loadStudents(), loadTeachers()]);
+  const overlay = openModal(`
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-extrabold">تسجيل حركة مالية</h3>
+        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+      </div>
+      <form id="txForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-semibold mb-1">النوع *</label>
+          <select id="txType" name="type" class="w-full h-11 rounded-xl border border-slate-300 px-3 bg-white">
+            <option value="INCOME">إيراد</option><option value="EXPENSE">مصروف</option>
+          </select></div>
+        <div><label class="block text-sm font-semibold mb-1">المبلغ (ج.م) *</label>
+          <input name="amount" type="number" min="0.01" step="0.01" required dir="ltr" class="w-full h-11 rounded-xl border border-slate-300 px-3 text-left"></div>
+        <div><label class="block text-sm font-semibold mb-1">الفئة *</label>
+          <select id="txCat" name="category_id" required class="w-full h-11 rounded-xl border border-slate-300 px-3 bg-white"></select></div>
+        <div><label class="block text-sm font-semibold mb-1">التاريخ</label>
+          <input name="date" type="date" class="w-full h-11 rounded-xl border border-slate-300 px-3" value="${new Date().toISOString().slice(0, 10)}"></div>
+        <div><label class="block text-sm font-semibold mb-1">ربط بطالب</label>
+          <select name="student_id" class="w-full h-11 rounded-xl border border-slate-300 px-3 bg-white"><option value="">بدون</option>${(sts || []).map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select></div>
+        <div><label class="block text-sm font-semibold mb-1">ربط بمعلم</label>
+          <select name="teacher_id" class="w-full h-11 rounded-xl border border-slate-300 px-3 bg-white"><option value="">بدون</option>${(tcs || []).map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select></div>
+        <div class="sm:col-span-2"><label class="block text-sm font-semibold mb-1">وصف / بيان</label>
+          <input name="description" class="w-full h-11 rounded-xl border border-slate-300 px-3" placeholder="مثال: قسط شهر سبتمبر"></div>
+        <div class="sm:col-span-2 flex justify-end gap-2">
+          <button type="button" onclick="this.closest('.fixed').remove()" class="h-11 px-5 rounded-xl border font-semibold text-slate-600">إلغاء</button>
+          <button type="submit" class="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold">حفظ</button>
+        </div>
+      </form>
+    </div>`);
+  const typeSel = overlay.querySelector("#txType");
+  const catSel = overlay.querySelector("#txCat");
+  const syncCats = () => {
+    catSel.innerHTML = (cats || []).filter((c) => c.type === typeSel.value)
+      .map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  };
+  syncCats();
+  typeSel.addEventListener("change", syncCats);
+  overlay.querySelector("#txForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const payload = {
+      type: fd.get("type"),
+      amount: Number(fd.get("amount")),
+      category_id: Number(fd.get("category_id")),
+      date: fd.get("date") || new Date().toISOString().slice(0, 10),
+      description: fd.get("description") || null,
+      student_id: fd.get("student_id") ? Number(fd.get("student_id")) : null,
+      teacher_id: fd.get("teacher_id") ? Number(fd.get("teacher_id")) : null,
+    };
+    const { error } = await supabase.from("Transaction").insert(payload);
+    if (error) return toast("خطأ: " + error.message, "error");
+    transactionsCache = null;
+    toast("تم تسجيل الحركة", "success");
+    closeModal(overlay);
+    renderFinance();
+  });
+}
+
+async function openCategoryModal() {
+  const overlay = openModal(`
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-extrabold">إضافة فئة مالية</h3>
+        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+      </div>
+      <form id="catForm" class="space-y-4">
+        <div><label class="block text-sm font-semibold mb-1">اسم الفئة *</label>
+          <input name="name" required class="w-full h-11 rounded-xl border border-slate-300 px-3" placeholder="مثال: كتب ومصاحف"></div>
+        <div><label class="block text-sm font-semibold mb-1">النوع *</label>
+          <select name="type" class="w-full h-11 rounded-xl border border-slate-300 px-3 bg-white">
+            <option value="INCOME">إيراد</option><option value="EXPENSE">مصروف</option>
+          </select></div>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="this.closest('.fixed').remove()" class="h-11 px-5 rounded-xl border font-semibold text-slate-600">إلغاء</button>
+          <button type="submit" class="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold">حفظ</button>
+        </div>
+      </form>
+    </div>`);
+  overlay.querySelector("#catForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await supabase.from("Category").insert({ name: fd.get("name"), type: fd.get("type") });
+    if (error) return toast("خطأ: " + error.message, "error");
+    categoriesCache = null;
+    toast("تمت إضافة الفئة", "success");
+    closeModal(overlay);
+    renderFinance();
+  });
+}
+
+async function deleteTransaction(id) {
+  if (!confirm("هل تريد حذف هذه الحركة؟")) return;
+  const { error } = await supabase.from("Transaction").delete().eq("id", id);
+  if (error) return toast("خطأ: " + error.message, "error");
+  transactionsCache = null;
+  toast("تم الحذف", "success");
+  renderFinance();
+}
+
+async function txJoined() {
+  const [ts, cats, sts, tcs] = await Promise.all([loadTransactions(), loadCategories(), loadStudents(), loadTeachers()]);
+  if (!ts) return null;
+  const catMap = Object.fromEntries((cats || []).map((c) => [c.id, c]));
+  const stMap = Object.fromEntries((sts || []).map((s) => [s.id, s]));
+  const tcMap = Object.fromEntries((tcs || []).map((t) => [t.id, t]));
+  let rows = ts.slice();
+  if (finType) rows = rows.filter((t) => t.type === finType);
+  if (finMonth) rows = rows.filter((t) => String(t.date).startsWith(finMonth));
+  if (finQ) {
+    const q = finQ.toLowerCase();
+    rows = rows.filter((t) => [t.description, (catMap[t.category_id] || {}).name, (stMap[t.student_id] || {}).name, (tcMap[t.teacher_id] || {}).name].join(" ").toLowerCase().includes(q));
+  }
+  rows.forEach((t) => { t.catName = (catMap[t.category_id] || {}).name || "—"; t.stName = (stMap[t.student_id] || {}).name; t.tcName = (tcMap[t.teacher_id] || {}).name; });
+  return rows;
+}
+
+async function renderFinance() {
+  const content = document.getElementById("content");
+  content.innerHTML = '<p class="text-slate-500">جارٍ التحميل...</p>';
+  const [rows, ts, cats] = await Promise.all([txJoined(), loadTransactions(), loadCategories()]);
+  if (!rows) return;
+  const income = rows.filter((t) => t.type === "INCOME").reduce((a, t) => a + Number(t.amount), 0);
+  const expense = rows.filter((t) => t.type === "EXPENSE").reduce((a, t) => a + Number(t.amount), 0);
+  const months = [...new Set((ts || []).map((t) => String(t.date).slice(0, 7)))].sort().reverse();
+
+  content.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <h1 class="text-2xl font-extrabold text-slate-800">الحسابات</h1>
+      <div class="flex gap-2">
+        <button onclick="openCategoryModal()" class="h-11 px-4 rounded-xl border font-semibold text-slate-700">+ إضافة فئة</button>
+        <button onclick="openTransactionModal()" class="h-11 px-4 rounded-xl bg-slate-900 text-white font-bold">+ تسجيل حركة</button>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">الإيرادات (ضمن الفلتر)</p><p class="text-lg font-bold text-emerald-700 mt-1">${fmt(income)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">المصروفات (ضمن الفلتر)</p><p class="text-lg font-bold text-red-700 mt-1">${fmt(expense)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">الصافي</p><p class="text-lg font-bold text-slate-800 mt-1">${fmt(income - expense)}</p></div>
+    </div>
+    <div class="flex flex-wrap gap-3 mb-5">
+      <select id="finType" class="h-11 rounded-xl border border-slate-300 px-3 bg-white">
+        <option value="">كل الأنواع</option><option value="INCOME" ${finType === "INCOME" ? "selected" : ""}>إيرادات</option><option value="EXPENSE" ${finType === "EXPENSE" ? "selected" : ""}>مصروفات</option>
+      </select>
+      <select id="finMonth" class="h-11 rounded-xl border border-slate-300 px-3 bg-white">
+        <option value="">كل الشهور</option>${months.map((m) => `<option value="${m}" ${finMonth === m ? "selected" : ""}>${m}</option>`).join("")}
+      </select>
+      <input id="finQ" placeholder="بحث..." class="h-11 flex-1 min-w-40 rounded-xl border border-slate-300 px-4" value="${esc(finQ)}">
+    </div>
+    <div class="bg-white rounded-2xl border overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600">
+          <tr><th class="text-right px-4 py-3">التاريخ</th><th class="text-right px-4 py-3">النوع</th><th class="text-right px-4 py-3">الفئة</th><th class="text-right px-4 py-3">البيان</th><th class="text-right px-4 py-3">طالب / معلم</th><th class="text-right px-4 py-3">المبلغ</th><th class="text-right px-4 py-3">حذف</th></tr>
+        </thead>
+        <tbody>
+          ${rows.length === 0 ? '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-400">لا توجد حركات</td></tr>' : rows.map((t) => `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+              <td class="px-4 py-3">${fmtDate(t.date)}</td>
+              <td class="px-4 py-3">${t.type === "INCOME" ? '<span class="text-xs font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">إيراد</span>' : '<span class="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-700">مصروف</span>'}</td>
+              <td class="px-4 py-3">${esc(t.catName)}</td>
+              <td class="px-4 py-3">${esc(t.description || "—")}</td>
+              <td class="px-4 py-3">${esc(t.stName || t.tcName || "—")}</td>
+              <td class="px-4 py-3 font-bold ${t.type === "INCOME" ? "text-emerald-700" : "text-red-700"}">${t.type === "INCOME" ? "+" : "-"}${fmt(t.amount)}</td>
+              <td class="px-4 py-3"><button onclick="deleteTransaction(${t.id})" class="text-sm text-red-600 hover:underline font-semibold">حذف</button></td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+
+  document.getElementById("finType").addEventListener("change", (e) => { finType = e.target.value; renderFinance(); });
+  document.getElementById("finMonth").addEventListener("change", (e) => { finMonth = e.target.value; renderFinance(); });
+  document.getElementById("finQ").addEventListener("keydown", (e) => { if (e.key === "Enter") { finQ = e.target.value.trim(); renderFinance(); } });
+}
+
+// ======================= التقارير =======================
+function downloadCSV(headers, rows, filename) {
+  const e = (v) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = [headers, ...rows].map((r) => r.map(e).join(",")).join("\r\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function studentBalances(sts, tcs, ts) {
+  const tcMap = Object.fromEntries((tcs || []).map((t) => [t.id, t.name]));
+  const now = new Date();
+  return (sts || []).filter((s) => s.status === "active").map((s) => {
+    const join = new Date(s.join_date);
+    let months = (now.getFullYear() - join.getFullYear()) * 12 + (now.getMonth() - join.getMonth()) + 1;
+    if (months < 0) months = 0;
+    const due = Number(s.monthly_fee) * months;
+    const paid = (ts || []).filter((t) => t.type === "INCOME" && t.student_id === s.id).reduce((a, t) => a + Number(t.amount), 0);
+    return { id: s.id, name: s.name, teacher: tcMap[s.teacher_id] || "—", fee: Number(s.monthly_fee), due, paid, balance: due - paid };
+  });
+}
+
+async function renderReports() {
+  const content = document.getElementById("content");
+  content.innerHTML = '<p class="text-slate-500">جارٍ التحميل...</p>';
+  const [ts, sts, tcs] = await Promise.all([loadTransactions(), loadStudents(), loadTeachers()]);
+  if (!ts) return;
+  const income = ts.filter((t) => t.type === "INCOME").reduce((a, t) => a + Number(t.amount), 0);
+  const expense = ts.filter((t) => t.type === "EXPENSE").reduce((a, t) => a + Number(t.amount), 0);
+  const balances = studentBalances(sts, tcs, ts);
+  const expected = balances.reduce((a, b) => a + b.fee, 0);
+  const series = monthlySeries(ts);
+
+  const catTotals = {};
+  ts.forEach((t) => { const k = t.category_id; catTotals[k] = catTotals[k] || { total: 0, type: t.type, name: "" }; catTotals[k].total += Number(t.amount); });
+  const cats = await loadCategories();
+  (cats || []).forEach((c) => { if (catTotals[c.id]) catTotals[c.id].name = c.name; });
+  const breakdown = Object.values(catTotals).filter((c) => c.name).sort((a, b) => b.total - a.total);
+  const maxCat = breakdown[0] ? breakdown[0].total : 1;
+
+  const csvRows = balances.map((b) => [b.name, b.teacher, b.fee, b.due, b.paid, b.balance]);
+
+  content.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <h1 class="text-2xl font-extrabold text-slate-800">التقارير</h1>
+      <button onclick="downloadCSV(['الطالب','المعلم','المصروف الشهري','المستحق','المدفوع','الرصيد'], ${JSON.stringify(csvRows)}, 'mutakhirat.csv')" class="h-11 px-4 rounded-xl border font-semibold text-slate-700">⬇ تصدير CSV</button>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">إجمالي الإيرادات</p><p class="text-lg font-bold text-emerald-700 mt-1">${fmt(income)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">إجمالي المصروفات</p><p class="text-lg font-bold text-red-700 mt-1">${fmt(expense)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">الصافي</p><p class="text-lg font-bold text-slate-800 mt-1">${fmt(income - expense)}</p></div>
+      <div class="bg-white rounded-2xl border p-4"><p class="text-xs text-slate-500">متوقع شهرياً (نشطون)</p><p class="text-lg font-bold text-slate-800 mt-1">${fmt(expected)}</p></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="bg-white rounded-2xl border p-6"><h2 class="font-bold mb-4">الإيرادات والمصروفات (آخر 12 شهر)</h2><canvas id="chart"></canvas></div>
+      <div class="bg-white rounded-2xl border p-6"><h2 class="font-bold mb-4">توزيع الحركات حسب الفئة</h2>
+        ${breakdown.length === 0 ? '<p class="text-sm text-slate-400">لا توجد حركات بعد</p>' : breakdown.map((c) => `
+          <div class="mb-3">
+            <div class="flex justify-between text-sm mb-1"><span>${esc(c.name)}</span><span class="${c.type === "INCOME" ? "text-emerald-700" : "text-red-700"} font-bold">${fmt(c.total)}</span></div>
+            <div class="h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full ${c.type === "INCOME" ? "bg-emerald-600" : "bg-red-600"}" style="width:${Math.max(c.total / maxCat * 100, 2)}%"></div></div>
+          </div>`).join("")}
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600">
+          <tr><th class="text-right px-4 py-3">الطالب</th><th class="text-right px-4 py-3">المعلم</th><th class="text-right px-4 py-3">المصروف الشهري</th><th class="text-right px-4 py-3">المستحق</th><th class="text-right px-4 py-3">المدفوع</th><th class="text-right px-4 py-3">الرصيد المتبقي</th></tr>
+        </thead>
+        <tbody>
+          ${balances.length === 0 ? '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">لا يوجد طلاب نشطون</td></tr>' : balances.map((b) => `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+              <td class="px-4 py-3 font-semibold">${esc(b.name)}</td>
+              <td class="px-4 py-3">${esc(b.teacher)}</td>
+              <td class="px-4 py-3">${fmt(b.fee)}</td>
+              <td class="px-4 py-3">${fmt(b.due)}</td>
+              <td class="px-4 py-3 text-emerald-700">${fmt(b.paid)}</td>
+              <td class="px-4 py-3 font-bold ${b.balance > 0 ? "text-red-700" : "text-emerald-700"}">${fmt(b.balance)}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+  drawChart(series);
+}
+</script>
+</body>
+</html>

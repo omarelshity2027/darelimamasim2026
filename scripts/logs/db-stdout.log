@@ -1,0 +1,59 @@
+[db] existing cluster found, skipping initdb
+2026-08-15 01:25:03.612 EEST [11800] LOG:  starting PostgreSQL 18.4 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit
+
+2026-08-15 01:25:03.627 EEST [11800] LOG:  listening on IPv6 address "::1", port 5433
+
+2026-08-15 01:25:03.627 EEST [11800] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+
+2026-08-15 01:25:04.111 EEST [11948] LOG:  database system was interrupted; last known up at 2026-08-15 00:29:45 EEST
+
+2026-08-15 01:25:14.288 EEST [11948] LOG:  syncing data directory (fsync), elapsed time: 10.17 s, current path: ./base/5/2836_fsm
+
+2026-08-15 01:25:15.635 EEST [11948] LOG:  database system was not properly shut down; automatic recovery in progress
+
+2026-08-15 01:25:15.805 EEST [11948] LOG:  redo starts at 0/2642F30
+
+2026-08-15 01:25:15.806 EEST [11948] LOG:  invalid record length at 0/2643038: expected at least 24, got 0
+2026-08-15 01:25:15.806 EEST [11948] LOG:  redo done at 0/2643000 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+
+2026-08-15 01:25:15.938 EEST [9176] LOG:  checkpoint starting: end-of-recovery immediate wait
+
+2026-08-15 01:25:16.506 EEST [9176] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.018 s, sync=0.083 s, total=0.649 s; sync files=2, longest=0.042 s, average=0.042 s; distance=0 kB, estimate=0 kB; lsn=0/2643038, redo lsn=0/2643038
+
+2026-08-15 01:25:16.607 EEST [11800] LOG:  database system is ready to accept connections
+
+[db] database dar_imam_asim already exists
+[db] PostgreSQL ready on port 5433
+2026-08-15 01:30:15.516 EEST [9176] LOG:  checkpoint starting: time
+
+2026-08-15 01:30:16.081 EEST [9176] LOG:  checkpoint complete: wrote 4 buffers (0.0%), wrote 0 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.433 s, sync=0.086 s, total=0.566 s; sync files=1, longest=0.083 s, average=0.083 s; distance=32 kB, estimate=32 kB; lsn=0/264B180, redo lsn=0/264B128
+
+2026-08-15 01:35:52.677 EEST [12220] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.678 EEST [11864] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.682 EEST [12048] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.682 EEST [13288] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-08-15 01:35:52.683 EEST [7868] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.689 EEST [13776] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.689 EEST [13336] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.693 EEST [12408] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.694 EEST [9904] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-08-15 01:35:52.697 EEST [1524] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+

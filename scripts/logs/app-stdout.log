@@ -1,0 +1,151 @@
+
+> dar-imam-asim@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.100.13:3000
+- Environments: .env
+✓ Ready in 18.2s
+✓ Running next.config.ts took 680ms
+○ Compiling proxy ...
+
+○ Compiling /login ...
+ GET /login 200 in 38.6s (next.js: 34.4s, proxy.ts: 1790ms, application-code: 2.4s)
+ GET /login 200 in 349ms (next.js: 44ms, proxy.ts: 20ms, application-code: 285ms)
+ GET /login 200 in 320ms (next.js: 31ms, proxy.ts: 22ms, application-code: 266ms)
+{"ts":"2026-08-14T22:29:46.710Z","level":"info","msg":"login success"}
+○ Compiling /dashboard ...
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0 ج.م" icon={{$$typeof: ..., render: ...}} tone=...>
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0 ج.م" icon={{$$typeof: ..., render: ...}} tone=...>
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title="الصافي" value="0 ج.م" icon={{$$typeof: ..., render: ...}} tone=...>
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0" icon={{$$typeof: ..., render: ...}}>
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0" icon={{$$typeof: ..., render: ...}}>
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '1626933478'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingDown}
+                          ^^^^^^^^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '3289507398'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Scale}
+                          ^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '2765703590'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Users}
+                          ^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '3358139750'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function GraduationCap}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '929537766'
+}
+ GET /dashboard 200 in 17.3s (next.js: 11.8s, proxy.ts: 31ms, application-code: 5.4s)
+ POST /login 200 in 17.5s (next.js: 15ms, proxy.ts: 24ms, application-code: 17.5s)
+  └─ ƒ login(undefined, {}) in 30ms src/lib/actions/auth.ts
+[browser] Uncaught Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0 ج.م" icon={{$$typeof: ..., render: ...}} tone=...>
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0 ج.م" icon={{$$typeof: ..., render: ...}} tone=...>
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title="الصافي" value="0 ج.م" icon={{$$typeof: ..., render: ...}} tone=...>
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0" icon={{$$typeof: ..., render: ...}}>
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  <... title=... value="0" icon={{$$typeof: ..., render: ...}}>
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '1626933478'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingDown}
+                          ^^^^^^^^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '3289507398'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Scale}
+                          ^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '2765703590'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Users}
+                          ^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '3358139750'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function GraduationCap}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at ignore-listed frames {
+  digest: '929537766'
+}
+ GET /dashboard 500 in 1294ms (next.js: 24ms, proxy.ts: 26ms, application-code: 1243ms)
+[browser] Uncaught Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function TrendingUp}
+                          ^^^^^^^^^^^^^^^^^^^
+ GET /dashboard 200 in 2.7s (next.js: 183ms, proxy.ts: 28ms, application-code: 2.5s)
+○ Compiling /students ...
+ GET /students 200 in 12.7s (next.js: 11.6s, proxy.ts: 29ms, application-code: 1121ms)
+ GET /teachers 200 in 3.4s (next.js: 3.1s, proxy.ts: 17ms, application-code: 368ms)
+○ Compiling /finance ...
+✓ Finished writing to filesystem cache in 14.7s
+ GET /finance 200 in 14.6s (next.js: 13.3s, proxy.ts: 17ms, application-code: 1326ms)
+ GET /reports 200 in 4.1s (next.js: 3.1s, proxy.ts: 14ms, application-code: 1052ms)
+ GET /dashboard 200 in 231ms (next.js: 33ms, proxy.ts: 15ms, application-code: 184ms)
+✓ Finished filesystem cache database compaction in 11.7s
+ GET /students 200 in 251ms (next.js: 23ms, proxy.ts: 19ms, application-code: 209ms)
+ GET /teachers 200 in 110ms (next.js: 19ms, proxy.ts: 13ms, application-code: 78ms)
+ GET /students 200 in 215ms (next.js: 12ms, proxy.ts: 18ms, application-code: 186ms)
+{"ts":"2026-08-14T23:08:17.817Z","level":"info","msg":"logout"}
+ GET /login 200 in 156ms (next.js: 18ms, proxy.ts: 12ms, application-code: 126ms)
+ POST /students 200 in 282ms (next.js: 11ms, proxy.ts: 19ms, application-code: 252ms)
+  └─ ƒ logout() in 7ms src/lib/actions/auth.ts
+ GET /login 200 in 60ms (next.js: 15ms, proxy.ts: 18ms, application-code: 27ms)
+ GET /login 200 in 93ms (next.js: 13ms, proxy.ts: 17ms, application-code: 63ms)
+{"ts":"2026-08-14T23:08:20.411Z","level":"info","msg":"login success"}
+ GET /dashboard 200 in 470ms (next.js: 12ms, proxy.ts: 16ms, application-code: 442ms)
+ POST /login 200 in 552ms (next.js: 9ms, proxy.ts: 15ms, application-code: 528ms)
+  └─ ƒ login(undefined, {}) in 23ms src/lib/actions/auth.ts
